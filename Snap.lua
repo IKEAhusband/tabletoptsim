@@ -26,8 +26,8 @@ local function categoryOf(obj)
   return nil
 end
 
--- Axis-aligned bounds check (works if this trigger object is NOT rotated)
-local function pointInAABB(p, b)
+-- Bounds check in this trigger's local space (works when the trigger is rotated)
+local function pointInOBBLocal(p, b)
   local cx, cy, cz = b.center.x, b.center.y, b.center.z
   local hx, hy, hz = b.size.x * 0.5, b.size.y * 0.5, b.size.z * 0.5
 
@@ -37,14 +37,19 @@ local function pointInAABB(p, b)
 end
 
 local function closestSnapPointWithTagInsideThisBox(snapPoints, pos, wantedTag)
-  local b = self.getBounds()
+  local b = self.getBoundsNormalized()
+  local posLocal = self.positionToLocal(pos)
   local best, bestDist = nil, math.huge
 
   for _, sp in ipairs(snapPoints) do
     if hasTag(sp.tags, wantedTag) then
-      local spp = Vector(sp.position)
-      if pointInAABB(spp, b) then
-        local d = Vector.distance(spp, pos)
+      -- Convert snap point position to this trigger's local space so rotation
+      -- does not affect the bounds check. Snap point positions are local to the
+      -- map object, so they need to be converted to world space first.
+      local spWorld = map.positionToWorld(Vector(sp.position))
+      local spp = self.positionToLocal(spWorld)
+      if pointInOBBLocal(spp, b) then
+        local d = Vector.distance(spp, posLocal)
         if d < bestDist then
           bestDist = d
           best = sp
