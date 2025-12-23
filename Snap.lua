@@ -44,10 +44,8 @@ local function closestSnapPointWithTagInsideThisBox(snapPoints, pos, wantedTag)
   for _, sp in ipairs(snapPoints) do
     if hasTag(sp.tags, wantedTag) then
       -- Convert snap point position to this trigger's local space so rotation
-      -- does not affect the bounds check. Snap point positions are local to the
-      -- map object, so they need to be converted to world space first.
-      local spWorld = map.positionToWorld(Vector(sp.position))
-      local spp = self.positionToLocal(spWorld)
+      -- does not affect the bounds check.
+      local spp = self.positionToLocal(Vector(sp.position))
       if pointInOBBLocal(spp, b) then
         local d = Vector.distance(spp, posLocal)
         if d < bestDist then
